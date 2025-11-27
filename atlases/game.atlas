@@ -1,0 +1,30 @@
+images {
+  image: "/assets/background/background.png"
+}
+images {
+  image: "/assets/lantern/lantern_blue.png"
+}
+images {
+  image: "/assets/lantern/lantern_green.png"
+}
+images {
+  image: "/assets/lantern/lantern_orange.png"
+}
+images {
+  image: "/assets/lantern/lantern_red.png"
+}
+images {
+  image: "/assets/lantern/lantern_skyblue.png"
+}
+images {
+  image: "/assets/lantern/lantern_yellow.png"
+}
+images {
+  image: "/assets/character/luma.png"
+}
+images {
+  image: "/assets/hud/heart-empty.png"
+}
+images {
+  image: "/assets/hud/heart-full.png"
+}

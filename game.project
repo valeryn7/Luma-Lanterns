@@ -5,15 +5,16 @@ main_collection = /main/main.collectionc
 shared_state = 1
 
 [display]
-width = 1920
-height = 1080
+width = 720
+height = 1280
 high_dpi = 1
+orientation = portrait
 
 [android]
 input_method = HiddenInputField
 
 [html5]
-scale_mode = stretch
+scale_mode = fit
 wasm_streaming = 1
 show_fullscreen_button = 0
 show_made_with_defold = 0
@@ -21,4 +22,3 @@ show_made_with_defold = 0
 [project]
 title = Luma Lanterns
 dependencies#0 = https://github.com/defold/extension-poki-sdk/archive/refs/heads/main.zip
-

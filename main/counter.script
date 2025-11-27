@@ -1,0 +1,41 @@
+-- Counter script: keeps a tap count and forwards it to the HUD.
+local M = {}
+
+function init(self)
+    self.count = 0
+end
+
+function on_message(self, message_id, message, sender)
+    if message_id == hash("increment") then
+        local amt = message.amount or 1
+        self.count = self.count + amt
+        -- Try to update an embedded label component `label` on this GO (count.go)
+        local ok = false
+        if pcall and label then
+            -- attempt using the Defold label module if available
+            local status, err = pcall(function()
+                label.set_text(msg.url("#label"), tostring(self.count))
+            end)
+            ok = status
+        end
+        if not ok then
+            -- Fallback: notify HUD GUI with the updated count
+            msg.post("/gui#hud", "set_counter", { count = self.count })
+        end
+    elseif message_id == hash("reset_counter") then
+        self.count = 0
+        -- Reset embedded label if possible, else notify HUD
+        local ok = false
+        if pcall and label then
+            local status, err = pcall(function()
+                label.set_text(msg.url("#label"), tostring(self.count))
+            end)
+            ok = status
+        end
+        if not ok then
+            msg.post("/gui#hud", "set_counter", { count = self.count })
+        end
+    end
+end
+
+return M

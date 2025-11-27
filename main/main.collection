@@ -1,2 +1,18 @@
 name: "main"
+instances {
+  id: "main"
+  prototype: "/main/main.go"
+}
+instances {
+  id: "background"
+  prototype: "/main/background.go"
+}
+instances {
+  id: "counter"
+  prototype: "/main/counter.go"
+  position {
+    x: 626.0
+    y: 1216.0
+  }
+}
 scale_along_z: 0

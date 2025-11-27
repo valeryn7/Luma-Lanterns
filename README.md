@@ -1,18 +1,44 @@
-# Poki Game Template
+ # Luma Lanterns — Defold minimal project
+ 
+ This workspace contains a minimal Defold project structure for a simple vertical, mobile-friendly tap game.
 
-Template project for HTML5 games on [Poki](https://poki.com/). This project is configured specifically for HTML5 games released on Poki. The project has the latest version of Poki SDK added as a *game.project* dependency.
+ What is included
+ - `game.project` — basic project config for 720x1280 portrait
+ - `main/main.collection` — minimal placeholder collection
+ - `main/main.go` — placeholder describing required factory + script components
+ - `main/main.script` — main game logic: spawns lanterns, handles taps, energy, lives
+ - `main/lantern.go` — placeholder for lantern prototype
+ - `main/lantern.script` — lantern movement + destroy logic
+ - `main/luma.go` & `main/luma.script` — Luma object and energy state logic
+ - `main/background.go` — background placeholder
+ - `gui/hud.gui` & `gui/hud.gui_script` — HUD and logic (energy bar, hearts, target color, state text)
+ - `gui/pause.gui` & `gui/pause.gui_script` — pause menu placeholder
+ - `atlases/game.atlas` — atlas placeholder (generate PNGs then create atlas in editor)
+ - `input/game.input_binding` — minimal input binding for touch
+ - `tools/generate_placeholders.py` & `scripts/generate_assets.sh` — generate solid PNG placeholders
 
-Note: When you beging working on your own Poki game it is recommended to lock which version of the Poki SDK you are using to ensure that your game runs without problems. Pick a Poki SDK version from the [list of releases](https://github.com/defold/extension-poki-sdk/releases) and update the Dependencies field in *game.project* to use this version.
+ Quick setup
+ 1. Open Defold and `Project -> Open` this folder.
+ 2. Generate placeholder PNGs (optional, helpful to avoid manual image creation):
 
+ ```bash
+ ./scripts/generate_assets.sh
+ ```
 
-## Poki
+ 3. In Defold Editor: create an Atlas `game.atlas` and add the generated PNGs from `assets/images/`.
+	 Name atlas sprites as: `lantern_red`, `lantern_blue`, `lantern_yellow`, `luma_idle`, `heart`, `background`.
+ 4. In the `main` collection create a game object (or use `main/main.go` placeholder):
+	 - Add a Factory component called `lantern_factory` that references `/main/lantern.go`.
+	 - Add a Script component referencing `/main/main.script` on the same GO.
+	 - Add GUI for HUD (attach `gui/hud.gui_script`, ensure GUI id is `hud`) and a GUI for pause if desired.
+	 - Add Luma and Background instances referencing `/main/luma.go` and `/main/background.go`.
 
-[Poki](https://poki.com/) is an online playground where players and game developers come together to play and create. The games on Poki are created by a diverse global game developer community.
+ How Level 1 works
+ - Lanterns spawn from the bottom and float upward.
+ - The HUD shows a target color (initially red) and an energy bar.
+ - Tapping the correct color increases energy; incorrect taps reduce lives.
+ - Reaching max energy triggers `Level Complete`, zero lives triggers `Game Over`.
 
-Head over to the [Defold Poki SDK documentation](https://defold.com/extension-poki-sdk/) and the [Poki for Developers page](https://developers.poki.com/) to learn how integrate the Poki SDK in your game and how to join the Poki developer community.
-
-
-
-## Defold for HTML5
-
-Learn more about HTML5 game development using Defold in the [official Defold documentation](https://defold.com/manuals/html5/). Pay extra attention to the [section on how to optimize your Defold game for HTML5](https://defold.com/manuals/html5/#optimizations)
+ Notes
+ - The project is intentionally minimal: many `.go` and `.gui` files are placeholders that require you to add components and sprites in the Defold Editor.
+ - Use `./scripts/generate_assets.sh` to create the PNG placeholders automatically.

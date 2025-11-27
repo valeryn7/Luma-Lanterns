@@ -1,0 +1,17 @@
+-- Luma logic: simple energy state tracking, reacts to energy changes via messages from `main.script`.
+local M = {}
+
+function init(self)
+    self.energy = 0
+    self.energy_max = 5
+end
+
+function on_message(self, message_id, message, sender)
+    if message_id == hash("set_energy") then
+        self.energy = message.energy or self.energy
+        -- We can add visual feedback here, e.g., change animation based on energy.
+        print(string.format("Luma energy: %d/%d", self.energy, self.energy_max))
+    end
+end
+
+return M

@@ -1,0 +1,16 @@
+local M = {}
+
+function init(self)
+    -- No-op for now; pause menu would show/hide when receiving messages
+end
+
+function on_message(self, message_id, message, sender)
+    if message_id == hash("show_pause") then
+        -- Show pause menu (implementation left to editor GUI)
+        print("Pause shown")
+    elseif message_id == hash("hide_pause") then
+        print("Pause hidden")
+    end
+end
+
+return M
