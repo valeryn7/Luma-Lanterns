@@ -1,21 +1,24 @@
--- Lantern behavior: floats upward and self-destructs when off-screen or requested.
+-- Lantern behavior for Luma Lanterns: floats upward, receives color/speed, deletes when off-screen.
 local M = {}
 
 function init(self)
-    -- Configurable per-instance
-    self.speed = self.speed or 80          -- pixels per second
-    self.radius = self.radius or 32        -- for simple tap detection
-    -- color should be set by the spawner via message `set_color`
+    -- Ideal for 100x139px lantern: tap radius ~45px
+    self.speed = self.speed or 80
+    self.radius = 45
     self.color = self.color or "red"
 end
 
 function on_message(self, message_id, message, sender)
     if message_id == hash("set_color") then
         self.color = message.color
+
     elseif message_id == hash("destroy") then
         go.delete()
+
     elseif message_id == hash("set_speed") then
-        if message.speed then self.speed = message.speed end
+        if message.speed then 
+            self.speed = message.speed 
+        end
     end
 end
 
@@ -23,7 +26,8 @@ function update(self, dt)
     local p = go.get_position()
     p.y = p.y + self.speed * dt
     go.set_position(p)
-    -- If off top of screen (rough check), delete to keep scene clean
+
+    -- delete if off the top of screen
     if p.y > 1400 then
         go.delete()
     end

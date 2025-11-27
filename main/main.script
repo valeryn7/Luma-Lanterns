@@ -1,113 +1,124 @@
 -- Main game controller: spawns lanterns, handles input taps, energy and lives.
 local M = {}
 
--- Configuration
-local SPAWN_X_RANGE = {80, 640} -- spawn x min/max for 720 width
+local SPAWN_X_MIN = 80
+local SPAWN_X_MAX = 640
 local SPAWN_Y = -100
-local LANTERN_SPEED_MIN = 60
-local LANTERN_SPEED_MAX = 130
+
+local SPEED_MIN = 60
+local SPEED_MAX = 130
 
 function init(self)
 	math.randomseed(os.time())
+
 	self.target_color = "red"
 	self.energy = 0
 	self.energy_max = 5
 	self.lives = 3
 	self.spawn_timer = 0
-	self.spawn_interval = 0.9
-	self.lanterns = {} -- [id] = {id=goid, color=color}
+	self.spawn_interval = 1.0
+	self.lanterns = {}
 
-	-- Inform HUD & Luma
--- 	msg.post("/gui#hud", "set_target_color", { color = self.target_color })
--- 	msg.post("/gui#hud", "update_energy", { energy = self.energy, energy_max = self.energy_max })
--- 	msg.post("/gui#hud", "update_lives", { lives = self.lives })
--- 	msg.post("/luma#luma", "set_energy", { energy = self.energy })
+	-- HUD + Luma initialization
+	-- msg.post("/hud#hud", "set_target_color", { color = self.target_color })
+	-- msg.post("/hud#hud", "update_energy", { energy = self.energy, energy_max = self.energy_max })
+	-- msg.post("/hud#hud", "update_lives", { lives = self.lives })
+	-- msg.post("/luma#luma", "set_energy", { energy = self.energy })
 end
 
--- Utility to spawn a lantern via factory component expected on this GO (#lantern_factory)
-local function spawn_lantern(self)
-	-- Create random color, but prefer target color occasionally
-	local colors = {"red","blue","yellow"}
-	local c = colors[math.random(1,#colors)]
-	-- 50% chance make it the target on level 1
-	if math.random() < 0.5 then c = self.target_color end
 
-	local x = math.random(SPAWN_X_RANGE[1], SPAWN_X_RANGE[2])
+local function spawn_lantern(self)
+	local colors = {"red","blue","yellow"}
+	local c = colors[math.random(1, #colors)]
+
+	-- 50% chance to spawn target color
+	if math.random() < 0.5 then
+		c = self.target_color
+	end
+
+	local x = math.random(SPAWN_X_MIN, SPAWN_X_MAX)
 	local pos = vmath.vector3(x, SPAWN_Y, 0)
-	-- create using factory component on the same game object
-	local ok, go_id = pcall(function() return factory.create("#lantern_factory", pos, nil, {}) end)
+
+	local ok, go_id = pcall(function()
+		return factory.create("#lantern_factory", pos, nil, {})
+	end)
+
 	if not ok or not go_id then
-		print("Warning: factory.create failed. Make sure a factory component `lantern_factory` exists on this game object and references /main/lantern.go")
+		print("FACTORY ERROR: Missing #lantern_factory on this game object.")
 		return
 	end
-	-- store and configure
-	self.lanterns[go_id] = { id = go_id, color = c }
-	-- send color to lantern script
+
+	self.lanterns[go_id] = { id = go_id, color = c, radius = 45 }
+
 	msg.post(go_id, "set_color", { color = c })
-	-- set a random upward speed on the lantern script if desired
-	local speed = math.random(LANTERN_SPEED_MIN, LANTERN_SPEED_MAX)
-	msg.post(go_id, "set_speed", { speed = speed })
+	msg.post(go_id, "set_speed", { speed = math.random(SPEED_MIN, SPEED_MAX) })
 end
 
+
 function update(self, dt)
-	-- spawn timer
 	self.spawn_timer = self.spawn_timer - dt
+
 	if self.spawn_timer <= 0 then
 		spawn_lantern(self)
 		self.spawn_timer = self.spawn_interval
 	end
 end
 
--- Simple tap detection: when input occurs, check distance to lanterns positions
+
 function on_input(self, action_id, action)
 	if action.released then
+
+		-- PRINT para debug de input
+		print("👉 TAP:", action.x, action.y)
+
 		local ax = action.x
 		local ay = action.y
+
 		for go_id, info in pairs(self.lanterns) do
-			if go_id and go.exists(go_id) then
+			if go.exists(go_id) then
 				local p = go.get_position(go_id)
-				-- action.x/y are in screen coordinates; in many setups world = screen.
-				-- Use a simple distance check with a generous radius.
 				local dx = ax - p.x
 				local dy = ay - p.y
-				local dist2 = dx*dx + dy*dy
-				local radius = 48
-				if dist2 <= radius*radius then
-					-- tapped this lantern
-					-- send a tap counter update to the counter GO (any tap)
+
+				if dx*dx + dy*dy <= info.radius * info.radius then
+
+					-- PRINT cuando tocás una linterna
+					print("🎈 TOCADA linterna → color:" .. info.color ..
+					" pos(" .. math.floor(p.x) .. ", " .. math.floor(p.y) .. ")")
+
 					msg.post("/counter#counter", "increment", { amount = 1 })
 
 					if info.color == self.target_color then
 						self.energy = self.energy + 1
-						msg.post("/gui#hud", "update_energy", { energy = self.energy, energy_max = self.energy_max })
+						msg.post("/hud#hud", "update_energy", 
+						{ energy = self.energy, energy_max = self.energy_max })
 						msg.post("/luma#luma", "set_energy", { energy = self.energy })
-						-- destroy lantern
-						msg.post(go_id, "destroy")
 					else
 						self.lives = self.lives - 1
-						msg.post("/gui#hud", "update_lives", { lives = self.lives })
-						print("Wrong color! Lives left:", self.lives)
-						msg.post(go_id, "destroy")
+						msg.post("/hud#hud", "update_lives", { lives = self.lives })
 					end
-					-- remove from tracking
+
+					msg.post(go_id, "destroy")
 					self.lanterns[go_id] = nil
-					-- Check win/lose
+
 					if self.energy >= self.energy_max then
-						msg.post("/gui#hud", "level_complete")
+						print("🎉 NIVEL COMPLETO!")
+						msg.post("/hud#hud", "level_complete")
 					elseif self.lives <= 0 then
-						msg.post("/gui#hud", "game_over")
+						print("💀 GAME OVER!")
+						msg.post("/hud#hud", "game_over")
 					end
-					-- only allow one lantern per tap
+
 					return true
 				end
 			else
-				-- clean up non-existing entity
 				self.lanterns[go_id] = nil
 			end
 		end
 	end
+
 	return false
 end
 
-return M
 
+return M
